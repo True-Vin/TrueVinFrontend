@@ -270,14 +270,7 @@ export function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
               Final Bid: {safeDisplay(final_bid)}
             </p>
 
-            <a
-              href={stock_number_href || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full mt-4 text-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-            >
-              View Auction
-            </a>
+        
 
             <Link
               to="/"
