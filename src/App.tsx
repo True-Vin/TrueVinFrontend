@@ -17,22 +17,42 @@ import GoogleAd from "./GoogleAd"; // <-- Our Ad component
    including multiple images, raw HTML for vin_display, and other details.
 */
 
+/**
+ * A simple 360 overlay that shows:
+ *  - A large main image on top
+ *  - A row of thumbnails below
+ * Clicking a thumbnail updates the main image.
+ */
+
+/**
+ * A 360 overlay that:
+ *  - Displays a large main image.
+ *  - Shows a row of thumbnails below.
+ *  - Provides left/right buttons to cycle frames.
+ */
+interface Custom360SpinProps {
+  images: string[];
+  onClose: () => void;
+}
+
 export function Custom360Spin({ images, onClose }: Custom360SpinProps) {
-  // The current frame index
-  const [frameIndex, setFrameIndex] = useState(0);
+  // The currently displayed (main) image index
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Helper to move frames manually
+  // Safely handle missing images
+  const mainImage = images[selectedIndex] || "";
+
+  // Left/Right Buttons
   const handlePrev = () => {
-    setFrameIndex((prev) => (prev - 1 + images.length) % images.length);
+    setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
   };
-
   const handleNext = () => {
-    setFrameIndex((prev) => (prev + 1) % images.length);
+    setSelectedIndex((prev) => (prev + 1) % images.length);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-      <div className="bg-white p-4 rounded-lg max-w-4xl w-full relative overflow-hidden">
+      <div className="bg-white p-4 rounded-lg max-w-4xl w-full relative">
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-red-600 hover:text-red-800 font-bold"
@@ -41,37 +61,68 @@ export function Custom360Spin({ images, onClose }: Custom360SpinProps) {
         </button>
         <h2 className="text-xl font-semibold mb-4">360 View</h2>
 
-        {/* 360 spin area */}
+        {/* Main image */}
         <div
-          className="w-full mx-auto border border-gray-200 rounded overflow-hidden relative"
-          style={{ maxWidth: "800px", height: "500px" }}
+          className="border border-gray-200 rounded mb-4 flex items-center justify-center bg-gray-50 relative"
+          style={{ width: "100%", height: "500px" }}
         >
-          {/* Show current frame */}
-          <img
-            src={images[frameIndex]}
-            alt={`360 frame #${frameIndex}`}
-            className="w-full h-full object-contain bg-gray-50"
-            onError={(e: any) => {
-              e.target.src =
-                "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80";
-            }}
-          />
+          {mainImage ? (
+            <img
+              src={mainImage}
+              alt={`360 main ${selectedIndex}`}
+              className="object-contain max-h-full max-w-full"
+              onError={(e: any) => {
+                e.target.src =
+                  "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80";
+              }}
+            />
+          ) : (
+            <p className="text-gray-500">No image available</p>
+          )}
 
           {/* Left arrow */}
-          <button
-            onClick={handlePrev}
-            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow hover:bg-gray-200"
-          >
-            ←
-          </button>
-
+          {images.length > 1 && (
+            <button
+              onClick={handlePrev}
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow hover:bg-gray-200"
+            >
+              ←
+            </button>
+          )}
           {/* Right arrow */}
-          <button
-            onClick={handleNext}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow hover:bg-gray-200"
-          >
-            →
-          </button>
+          {images.length > 1 && (
+            <button
+              onClick={handleNext}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow hover:bg-gray-200"
+            >
+              →
+            </button>
+          )}
+        </div>
+
+        {/* Thumbnail row */}
+        <div className="flex gap-2 overflow-x-auto">
+          {images.map((imgUrl, idx) => (
+            <div
+              key={idx}
+              onClick={() => setSelectedIndex(idx)}
+              className={`cursor-pointer border ${
+                idx === selectedIndex
+                  ? "border-blue-500"
+                  : "border-gray-200 hover:border-gray-400"
+              } rounded p-1`}
+            >
+              <img
+                src={imgUrl}
+                alt={`Thumb ${idx}`}
+                className="h-16 w-16 object-cover"
+                onError={(e: any) => {
+                  e.target.src =
+                    "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80";
+                }}
+              />
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -82,7 +133,7 @@ export function Custom360Spin({ images, onClose }: Custom360SpinProps) {
  * VehicleDetailPage component
  * Displays normal images, vehicle details, and an optional 360 view
  */
-function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
+export function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
   const { stockNumber } = useParams();
   const vehicle = vehicles.find((v) => v.stock_number === stockNumber);
 
@@ -111,11 +162,12 @@ function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
     allpagedata_3sixty = []
   } = vehicle;
 
-  const title = allpagedata_fields.VehicleTitle || "Vehicle Detail";
+  // We'll use the first normal image as the main displayed one
   const [mainImage, setMainImage] = useState(allpagedata_images[0] || "");
-  // Show/hide the 360 spin overlay
+  // Show/hide the 360 overlay
   const [show360, setShow360] = useState(false);
 
+  const title = allpagedata_fields.VehicleTitle || "Vehicle Detail";
   const safeDisplay = (val: any) => val || "Not available";
 
   return (
@@ -176,7 +228,7 @@ function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
 
         {/* Layout for images */}
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Thumbnails */}
+          {/* Thumbnails of normal images */}
           <div className="flex md:flex-col flex-wrap gap-2 md:max-h-[80vh] overflow-y-auto">
             {allpagedata_images.map((img: string, idx: number) => (
               <img
@@ -218,7 +270,14 @@ function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
               Final Bid: {safeDisplay(final_bid)}
             </p>
 
-         
+            <a
+              href={stock_number_href || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full mt-4 text-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              View Auction
+            </a>
 
             <Link
               to="/"
@@ -262,7 +321,6 @@ function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
     </div>
   );
 }
-
 
 /**
  * VehicleDetailPage component
