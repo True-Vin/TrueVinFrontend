@@ -162,6 +162,17 @@ export function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
     allpagedata_3sixty = []
   } = vehicle;
 
+  // Extract the last 6 digits from OCR result
+  const ocrVin = vehicle.ocr_result || "";
+  const ocrVinLast6 = ocrVin.slice(-6);
+
+  // Extract the first 11 digits from the two VIN fields in allpagedata_fields
+  const allFieldsVin = allpagedata_fields.VIN || "";
+  const allFieldsVinFirst11 = allFieldsVin.slice(0, 11);
+
+  const allFieldsVinStatus = allpagedata_fields.VIN_Status_ || "";
+  const allFieldsVinStatusFirst11 = allFieldsVinStatus.slice(0, 11);
+
   // We'll use the first normal image as the main displayed one
   const [mainImage, setMainImage] = useState(allpagedata_images[0] || "");
   // Show/hide the 360 overlay
@@ -194,18 +205,7 @@ export function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
               <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2">
                 Home
               </Link>
-              <a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                Buy Vehicles
-              </a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                Sell Vehicles
-              </a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                Auctions
-              </a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                Services
-              </a>
+           
             </div>
             <div className="flex items-center space-x-4">
               <button className="text-gray-700 hover:text-blue-600">
@@ -270,7 +270,11 @@ export function VehicleDetailPage({ vehicles }: { vehicles: any[] }) {
               Final Bid: {safeDisplay(final_bid)}
             </p>
 
-        
+            <p className="text-xl font-bold text-black-600 mt-4">
+              VIN: {allFieldsVinFirst11}{ocrVinLast6}
+            </p>
+
+          
 
             <Link
               to="/"
@@ -340,7 +344,7 @@ function VehicleListPage({
   isMenuOpen,
   setIsMenuOpen,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
 }: VehicleListPageProps) {
   const safeDisplay = (value: any) => value || "Not available";
 
@@ -348,10 +352,20 @@ function VehicleListPage({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const carsPerPage = 15;
 
-  // Filter logic: remove vehicles whose final_bid is "N/A"
-  const filteredVehicles = vehicles.filter(
-    (vehicle: any) => safeDisplay(vehicle.final_bid) !== "N/A"
-  );
+  // Filter to remove vehicles whose final_bid is "N/A"
+  // Then apply VIN-based search (allFieldsVinFirst11 + ocrVinLast6)
+  const filteredVehicles = vehicles
+    .filter((vehicle: any) => safeDisplay(vehicle.final_bid) !== "N/A")
+    .filter((vehicle: any) => {
+      const allFieldsVin = vehicle.allpagedata_fields?.VIN || "";
+      const ocrVin = vehicle.ocr_result || "";
+
+      const allFieldsVinFirst11 = allFieldsVin.slice(0, 11);
+      const ocrVinLast6 = ocrVin.slice(-6);
+
+      const combinedVin = (allFieldsVinFirst11 + ocrVinLast6).toLowerCase();
+      return !searchQuery || combinedVin.includes(searchQuery.toLowerCase());
+    });
 
   // Calculate pagination indices
   const startIndex = (currentPage - 1) * carsPerPage;
@@ -359,10 +373,10 @@ function VehicleListPage({
   const totalVehicles = filteredVehicles.length;
   const totalPages = Math.ceil(totalVehicles / carsPerPage);
 
-  // Slice the array to show only the vehicles on the current page
+  // Vehicles to show on the current page
   const vehiclesOnPage = filteredVehicles.slice(startIndex, endIndex);
 
-  // Handlers for next/previous
+  // Handlers for next/previous pages
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage((prev) => prev - 1);
@@ -397,18 +411,7 @@ function VehicleListPage({
             </div>
 
             <div className="hidden md:flex items-center space-x-4">
-              <a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                Buy Vehicles
-              </a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                Sell Vehicles
-              </a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                Auctions
-              </a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                Services
-              </a>
+           
             </div>
 
             <div className="flex items-center space-x-4">
@@ -465,7 +468,7 @@ function VehicleListPage({
               <div className="flex flex-col md:flex-row gap-4">
                 <input
                   type="text"
-                  placeholder="Search by make, model, or stock number..."
+                  placeholder="Search by VIN.."
                   className="flex-1 px-6 py-4 rounded-lg text-lg"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -534,7 +537,7 @@ function VehicleListPage({
                       <div
                         className="text-gray-600 break-words mb-4"
                         dangerouslySetInnerHTML={{
-                          __html: vehicle.vin_display || ""
+                          __html: vehicle.vin_display || "",
                         }}
                       />
 
@@ -583,6 +586,7 @@ function VehicleListPage({
     </>
   );
 }
+
 
 /*
   App:
