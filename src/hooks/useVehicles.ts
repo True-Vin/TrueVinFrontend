@@ -14,9 +14,11 @@ export function useVehicles() {
         if (!response.ok) throw new Error("Failed to fetch data");
         const result = await response.json();
 
-        // Filter only those vehicles which have allpagedata_passed
+        // Filter only those vehicles which have allpagedata_passed and converter_passed
         const filteredData = result.filter(
-          (vehicle: Vehicle) => vehicle.allpagedata_passed === true
+          (vehicle: Vehicle) =>
+            vehicle.allpagedata_passed === true &&
+            vehicle.converter_passed === true
         );
 
         // For images use only allpagedata_images
@@ -37,4 +39,4 @@ export function useVehicles() {
   }, []);
 
   return { vehicles, loading };
-} 
+}

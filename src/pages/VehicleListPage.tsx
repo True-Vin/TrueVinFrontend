@@ -108,7 +108,7 @@ export function VehicleListPage({
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/30"></div>
         <div className="relative max-w-6xl mx-auto px-6 space-y-6">
-          <h1 className="text-5xl font-bold text-white text-center">Search Your Vehicles</h1>
+          <h1 className="text-5xl font-bold text-white text-center">Search Vehicles</h1>
 
           {/* Mode Switch */}
           <div className="flex justify-center">

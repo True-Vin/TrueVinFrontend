@@ -10,7 +10,12 @@ export function DynamicMeta({ vehicle }: DynamicMetaProps) {
     if (!vehicle) return;
 
     const title = vehicle.allpagedata_fields.VehicleTitle || 'Vehicle Detail';
-    const description = `${vehicle.allpagedata_fields.Year} ${vehicle.allpagedata_fields.Make} ${vehicle.allpagedata_fields.Model} - Stock #${vehicle.stock_number}`;
+    const vin = vehicle.allpagedata_fields.VIN || '';
+    const ocrVin = vehicle.ocr_result || '';
+    const fullVin = vin || ocrVin;
+    
+    // Create a description that includes the VIN for SEO
+    const description = `${vehicle.allpagedata_fields.Year} ${vehicle.allpagedata_fields.Make} ${vehicle.allpagedata_fields.Model} - Stock #${vehicle.stock_number}${fullVin ? ` - VIN: ${fullVin}` : ''}`;
     const image = vehicle.allpagedata_images[0] || '/og-image.html';
 
     // Update meta tags
@@ -31,6 +36,12 @@ export function DynamicMeta({ vehicle }: DynamicMetaProps) {
       'twitter:image': image,
     };
 
+    // Add VIN-specific meta tag for SEO
+    const vinMetaTag = document.createElement('meta');
+    vinMetaTag.setAttribute('name', 'vehicle:vin');
+    vinMetaTag.setAttribute('content', fullVin);
+    document.head.appendChild(vinMetaTag);
+
     // Update all meta tags
     Object.entries({ ...ogTags, ...twitterTags }).forEach(([property, content]) => {
       let element = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
@@ -45,6 +56,13 @@ export function DynamicMeta({ vehicle }: DynamicMetaProps) {
     // Cleanup function
     return () => {
       document.title = 'TrueVin - Vehicle Marketplace';
+      
+      // Remove VIN meta tag
+      const vinMetaTag = document.querySelector('meta[name="vehicle:vin"]');
+      if (vinMetaTag) {
+        document.head.removeChild(vinMetaTag);
+      }
+      
       // Reset meta tags to default values
       const defaultTags = {
         'og:title': 'TrueVin - Vehicle Marketplace',
