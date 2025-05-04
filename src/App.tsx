@@ -1,7 +1,9 @@
+// App.jsx
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { VehicleListPage } from "./pages/VehicleListPage";
 import { VehicleDetailPage } from "./pages/VehicleDetailPage";
+
 import { AboutUsPage } from "./pages/AboutUsPage";
 import { ContactUsPage } from "./pages/ContactUsPage";
 import { useVehicles } from "./hooks/useVehicles";
@@ -28,17 +30,28 @@ export function App() {
             />
           }
         />
-        <Route
-          path="/vehicle/:stockNumber"
-          element={<VehicleDetailPage vehicles={vehicles} />}
-        />
+
+       <Route
+         path="/vehicle/:stockNumber"
+         element={<VehicleDetailPage />}
+       />
         <Route
           path="/about"
-          element={<AboutUsPage isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />}
+          element={
+            <AboutUsPage
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+            />
+          }
         />
         <Route
           path="/contact"
-          element={<ContactUsPage isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />}
+          element={
+            <ContactUsPage
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+            />
+          }
         />
       </Routes>
     </Router>
